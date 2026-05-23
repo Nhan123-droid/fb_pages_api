@@ -1,0 +1,11 @@
+groups:
+- name: dead_letter_alerts
+  rules:
+  - alert: DeadLetterQueueMessage
+    expr: sum(kafka_topic_partition_current_offset{topic="dead_letter"}) > 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Có message mới trong Dead Letter Queue"
+      description: "Hệ thống phát hiện có message gửi thất bại quá số lần quy định và đã lọt vào DLQ."
