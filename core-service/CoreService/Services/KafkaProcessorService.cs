@@ -67,11 +67,26 @@ public class KafkaProcessorService : BackgroundService
                     var aiService = scope.ServiceProvider.GetRequiredService<IAiService>();
                     var ruleEngine = scope.ServiceProvider.GetRequiredService<RuleEngineService>();
 
-                    // 1. Phân tích AI
-                    var aiResult = aiService.AnalyzeMessageAsync(ev.Message, stoppingToken).GetAwaiter().GetResult();
+                    ReplyCommand command;
+                    if (ev.IsPendingReview)
+                    {
+                        _logger.LogWarning("Event {EventId} is pending review due to rate limiting. Skipping AI and rules.", ev.EventId);
+                        command = new ReplyCommand
+                        {
+                            CommandId = Guid.NewGuid().ToString("N"),
+                            EventId = ev.EventId,
+                            Action = "pending_review",
+                            Target = new ReplyCommand.TargetInfo { PageId = ev.PageId, CommentId = ev.CommentId }
+                        };
+                    }
+                    else
+                    {
+                        // 1. Phân tích AI
+                        var aiResult = aiService.AnalyzeMessageAsync(ev.Message ?? "", stoppingToken).GetAwaiter().GetResult();
 
-                    // 2. Rule Engine ra quyết định
-                    var command = ruleEngine.Process(ev, aiResult);
+                        // 2. Rule Engine ra quyết định
+                        command = ruleEngine.Process(ev, aiResult);
+                    }
 
                     // 3. Publish vào reply_commands
                     var commandJson = JsonSerializer.Serialize(command);

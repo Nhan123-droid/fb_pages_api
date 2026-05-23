@@ -30,10 +30,23 @@ namespace Page_API.Services
         public async Task HandleAsync(BackendCommandMessage command, CancellationToken cancellationToken)
         {
             // 1. Kiểm tra Idempotency
-            if (_dbContext.ProcessedCommands.Any(c => c.CommandId == command.CommandId))
+            var trackedCmd = _dbContext.ProcessedCommands.FirstOrDefault(c => c.CommandId == command.CommandId);
+            if (trackedCmd != null && (trackedCmd.Status == "processed" || trackedCmd.Status == "replied"))
             {
-                _logger.LogInformation("Command {CommandId} was already processed. Skipping.", command.CommandId);
+                _logger.LogInformation("Command {CommandId} was already processed successfully. Skipping.", command.CommandId);
                 return;
+            }
+
+            if (trackedCmd == null)
+            {
+                trackedCmd = new ProcessedCommand
+                {
+                    CommandId = command.CommandId,
+                    EventId = command.EventId,
+                    Action = command.Action,
+                    Status = "received"
+                };
+                _dbContext.ProcessedCommands.Add(trackedCmd);
             }
 
             try
@@ -54,13 +67,9 @@ namespace Page_API.Services
                     _logger.LogInformation("No action taken for command {CommandId} (Action: {Action})", command.CommandId, command.Action);
                 }
 
-                // 3. Lưu lịch sử xử lý thành công (Idempotency)
-                _dbContext.ProcessedCommands.Add(new ProcessedCommand
-                {
-                    CommandId = command.CommandId,
-                    EventId = command.EventId,
-                    Action = command.Action
-                });
+                // 3. Cập nhật lịch sử xử lý thành công
+                trackedCmd.Status = command.Action == "reply" ? "replied" : "processed";
+                trackedCmd.UpdatedAt = DateTime.UtcNow;
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)
@@ -85,7 +94,14 @@ namespace Page_API.Services
                     Value = json
                 }, cancellationToken);
                 
+                
                 _logger.LogInformation("Published failed command {CommandId} to {Topic}", command.CommandId, _failedTopic);
+
+                // Cập nhật trạng thái failed
+                trackedCmd.Status = "failed";
+                trackedCmd.ErrorMessage = ex.Message;
+                trackedCmd.UpdatedAt = DateTime.UtcNow;
+                await _dbContext.SaveChangesAsync(cancellationToken);
             }
         }
     }

@@ -1,11 +1,9 @@
 using RetryService;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddHostedService<RetryWorker>();
 
-var app = builder.Build();
+var host = builder.Build();
 
-app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "retry-service" }));
-
-app.Run();
+host.Run();

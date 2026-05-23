@@ -8,6 +8,7 @@ using WebhookService.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
+builder.Services.AddMemoryCache();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.Configure<FacebookWebhookOptions>(builder.Configuration.GetSection("Facebook"));
@@ -45,7 +46,7 @@ app.MapGet("/webhook", (HttpRequest request, IOptions<FacebookWebhookOptions> op
 
     if (!string.Equals(verifyToken, options.Value.VerifyToken, StringComparison.Ordinal))
     {
-        return Results.Forbid();
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
     }
 
     if (string.IsNullOrWhiteSpace(challenge))
@@ -73,7 +74,7 @@ app.MapPost("/webhook", async (
     var signatureHeader = request.Headers["X-Hub-Signature-256"].ToString();
     if (string.IsNullOrWhiteSpace(signatureHeader))
     {
-        return Results.Unauthorized();
+        return Results.StatusCode(StatusCodes.Status401Unauthorized);
     }
 
     string rawBody;
@@ -89,7 +90,7 @@ app.MapPost("/webhook", async (
 
     if (!IsValidSignature(signatureHeader, rawBody, options.Value.AppSecret))
     {
-        return Results.Forbid();
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
     }
 
     JToken payload;

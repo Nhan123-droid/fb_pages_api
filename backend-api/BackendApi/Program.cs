@@ -1,6 +1,7 @@
 using Confluent.Kafka;
 using Polly;
 using Polly.Extensions.Http;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,10 @@ builder.Services.AddHttpClient<Page_API.Services.IFacebookService, Page_API.Serv
 })
 .AddPolicyHandler(HttpPolicyExtensions
     .HandleTransientHttpError()
-    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
+.AddPolicyHandler(HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .CircuitBreakerAsync(10, TimeSpan.FromSeconds(30)));
 
 builder.Services.AddSingleton<IProducer<string, string>>(sp =>
 {

@@ -2,6 +2,7 @@ using CoreService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IAiService, MockAiService>();
 builder.Services.AddSingleton<RuleEngineService>();
 builder.Services.AddHostedService<KafkaProcessorService>();

@@ -1,4 +1,5 @@
 using System.Globalization;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 using WebhookService.Models;
 
@@ -6,6 +7,15 @@ namespace WebhookService.Services;
 
 public class FacebookCommentEventNormalizer
 {
+    private readonly IMemoryCache _cache;
+    private readonly ILogger<FacebookCommentEventNormalizer> _logger;
+
+    public FacebookCommentEventNormalizer(IMemoryCache cache, ILogger<FacebookCommentEventNormalizer> logger)
+    {
+        _cache = cache;
+        _logger = logger;
+    }
+
     public IReadOnlyList<NormalizedFacebookEvent> NormalizeCommentEvents(
         JToken payload,
         string? expectedPageId)
@@ -73,11 +83,33 @@ public class FacebookCommentEventNormalizer
                     ?? value["from"]?["id"]?.ToString();
                 var createdAt = ParseCreatedAt(value["created_time"]) ?? receivedAt;
 
+                var eventId = string.IsNullOrWhiteSpace(commentId)
+                        ? $"facebook:comment:{Guid.NewGuid():N}"
+                        : $"facebook:comment:{commentId}";
+
+                bool isPendingReview = false;
+                if (!string.IsNullOrWhiteSpace(actorId))
+                {
+                    var cacheKey = $"rate_limit_{actorId}";
+                    var currentCount = _cache.GetOrCreate(cacheKey, entry =>
+                    {
+                        entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+                        return 0;
+                    });
+
+                    currentCount++;
+                    _cache.Set(cacheKey, currentCount, TimeSpan.FromMinutes(1));
+
+                    if (currentCount > 20)
+                    {
+                        isPendingReview = true;
+                        _logger.LogWarning("Rate limit exceeded for actor {ActorId} ({Count} comments in 1 min). Event {EventId} marked as pending_review.", actorId, currentCount, eventId);
+                    }
+                }
+
                 result.Add(new NormalizedFacebookEvent
                 {
-                    EventId = string.IsNullOrWhiteSpace(commentId)
-                        ? $"facebook:comment:{Guid.NewGuid():N}"
-                        : $"facebook:comment:{commentId}",
+                    EventId = eventId,
                     PageId = pageId,
                     PostId = postId,
                     CommentId = commentId,
@@ -85,7 +117,8 @@ public class FacebookCommentEventNormalizer
                     Message = value.Value<string>("message"),
                     CreatedAt = createdAt,
                     RawEvent = (JObject)change.DeepClone(),
-                    ReceivedAt = receivedAt
+                    ReceivedAt = receivedAt,
+                    IsPendingReview = isPendingReview
                 });
             }
         }

@@ -17,4 +17,5 @@ public class NormalizedFacebookEvent
     public JObject RawEvent { get; set; } = new();
     public DateTimeOffset ReceivedAt { get; set; }
     public string SchemaVersion { get; set; } = "1.0";
+    public bool IsPendingReview { get; set; } = false;
 }

@@ -2,7 +2,8 @@ namespace CoreService.Models;
 
 public class NormalizedFacebookEvent
 {
-    public int SchemaVersion { get; set; }
+    public string SchemaVersion { get; set; } = "1.0";
+    public bool IsPendingReview { get; set; } = false;
     public string EventId { get; set; } = string.Empty;
     public string EventType { get; set; } = string.Empty;
     public string Source { get; set; } = "facebook";
