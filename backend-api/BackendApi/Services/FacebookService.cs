@@ -126,5 +126,16 @@ namespace Page_API.Services
             }
             return await response.Content.ReadFromJsonAsync<object>(cancellationToken: cancellationToken);
         }
+
+        public async Task<object?> HideCommentAsync(string commentId, CancellationToken cancellationToken = default)
+        {
+            var token = System.Net.WebUtility.UrlEncode(_options.PageAccessToken);
+            var response = await _httpClient.PostAsJsonAsync($"{commentId}?access_token={token}", new { is_hidden = true }, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ThrowFacebookApiException(response);
+            }
+            return await response.Content.ReadFromJsonAsync<object>(cancellationToken: cancellationToken);
+        }
     }
 }

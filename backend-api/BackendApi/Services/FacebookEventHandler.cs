@@ -57,10 +57,10 @@ namespace Page_API.Services
                     await _facebookService.ReplyToCommentAsync(command.Target.CommentId, command.ReplyText, cancellationToken);
                     _logger.LogInformation("Replied to comment {CommentId} with: {Text}", command.Target.CommentId, command.ReplyText);
                 }
-                else if (command.Action == "hide")
+                else if (command.Action == "hide" || command.Action == "hide_and_review" || command.Action == "blacklist_block")
                 {
-                    // Giả sử có hàm HideCommentAsync
-                    _logger.LogInformation("Hid comment {CommentId}", command.Target.CommentId);
+                    await _facebookService.HideCommentAsync(command.Target.CommentId, cancellationToken);
+                    _logger.LogInformation("Hid comment {CommentId} on Facebook due to Action: {Action}", command.Target.CommentId, command.Action);
                 }
                 else
                 {

@@ -12,5 +12,6 @@ namespace Page_API.Services
         Task<object?> GetLikesAsync(string postId);
         Task<object?> GetInsightsAsync(string pageId);
         Task<object?> ReplyToCommentAsync(string commentId, string message, CancellationToken cancellationToken = default);
+        Task<object?> HideCommentAsync(string commentId, CancellationToken cancellationToken = default);
     }
 }
