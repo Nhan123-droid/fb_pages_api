@@ -19,7 +19,7 @@ public class RuleEngineService
     {
         var command = new ReplyCommand
         {
-            CommandId = Guid.NewGuid().ToString("N"),
+            CommandId = string.Empty,
             EventId = ev.EventId,
             Target = new ReplyCommand.TargetInfo
             {
@@ -27,7 +27,8 @@ public class RuleEngineService
                 CommentId = ev.CommentId
             },
             Intent = aiResult.Intent,
-            Sentiment = aiResult.Sentiment
+            Sentiment = aiResult.Sentiment,
+            OriginalMessage = ev.Message ?? string.Empty
         };
 
         var actorId = ev.UserId ?? "unknown";
@@ -94,6 +95,7 @@ public class RuleEngineService
             command.Action = "manual_review";
         }
 
+        command.CommandId = $"{ev.EventId}_{command.Action}";
         return command;
     }
 }

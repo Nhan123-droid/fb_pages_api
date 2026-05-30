@@ -44,7 +44,13 @@ namespace Page_API.Services
                     CommandId = command.CommandId,
                     EventId = command.EventId,
                     Action = command.Action,
-                    Status = "received"
+                    Status = "received",
+                    PageId = command.Target.PageId,
+                    CommentId = command.Target.CommentId,
+                    UserMessage = command.OriginalMessage,
+                    BotReply = command.ReplyText,
+                    Intent = command.Intent,
+                    Sentiment = command.Sentiment
                 };
                 _dbContext.ProcessedCommands.Add(trackedCmd);
             }

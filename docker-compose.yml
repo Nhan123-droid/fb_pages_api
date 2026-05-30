@@ -58,6 +58,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: fb_api-sqlserver
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+      MSSQL_PID: "Developer"
+    ports:
+      - "14333:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
   prometheus:
     image: prom/prometheus:latest
     volumes:
@@ -74,3 +86,4 @@ services:
 
 volumes:
   postgres_data:
+  sqlserver_data:

@@ -73,10 +73,11 @@ public class KafkaProcessorService : BackgroundService
                         _logger.LogWarning("Event {EventId} is pending review due to rate limiting. Skipping AI and rules.", ev.EventId);
                         command = new ReplyCommand
                         {
-                            CommandId = Guid.NewGuid().ToString("N"),
+                            CommandId = $"{ev.EventId}_pending_review",
                             EventId = ev.EventId,
                             Action = "pending_review",
-                            Target = new ReplyCommand.TargetInfo { PageId = ev.PageId, CommentId = ev.CommentId }
+                            Target = new ReplyCommand.TargetInfo { PageId = ev.PageId, CommentId = ev.CommentId },
+                            OriginalMessage = ev.Message ?? string.Empty
                         };
                     }
                     else

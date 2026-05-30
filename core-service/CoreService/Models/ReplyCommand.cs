@@ -8,6 +8,7 @@ public class ReplyCommand
     public string Action { get; set; } = string.Empty;
     public TargetInfo Target { get; set; } = new();
     public string ReplyText { get; set; } = string.Empty;
+    public string OriginalMessage { get; set; } = string.Empty;
     public string Intent { get; set; } = string.Empty;
     public string Sentiment { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

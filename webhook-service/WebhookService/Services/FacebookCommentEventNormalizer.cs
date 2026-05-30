@@ -42,11 +42,14 @@ public class FacebookCommentEventNormalizer
         foreach (var entry in entries.OfType<JObject>())
         {
             var pageId = entry.Value<string>("id") ?? string.Empty;
+            // Tạm thời tắt check Page ID để nhận được tin nhắn
+            /*
             if (!string.IsNullOrWhiteSpace(expectedPageId)
                 && !string.Equals(pageId, expectedPageId, StringComparison.Ordinal))
             {
                 continue;
             }
+            */
 
             var changes = entry["changes"] as JArray;
             if (changes is null)
@@ -81,6 +84,14 @@ public class FacebookCommentEventNormalizer
                 var postId = value.Value<string>("post_id");
                 var actorId = value.Value<string>("sender_id")
                     ?? value["from"]?["id"]?.ToString();
+                    
+                // Chống Infinite Loop: Bỏ qua comment do chính Fanpage bình luận
+                if (!string.IsNullOrWhiteSpace(actorId) && !string.IsNullOrWhiteSpace(pageId) && actorId == pageId)
+                {
+                    _logger.LogInformation("Ignored self-comment (Bot replying to itself).");
+                    continue;
+                }
+
                 var createdAt = ParseCreatedAt(value["created_time"]) ?? receivedAt;
 
                 var eventId = string.IsNullOrWhiteSpace(commentId)

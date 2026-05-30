@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<Page_API.Data.AppDbContext>(options => 
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=app.db"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=localhost,1433;Database=pageapi;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True"));
 
 // Configure Facebook Options
 builder.Services.Configure<Page_API.Models.FacebookOptions>(builder.Configuration.GetSection("Facebook"));

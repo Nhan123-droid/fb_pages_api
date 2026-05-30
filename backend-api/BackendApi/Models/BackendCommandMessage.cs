@@ -8,6 +8,9 @@ namespace Page_API.Models
         public string Action { get; set; } = string.Empty;
         public TargetInfo Target { get; set; } = new();
         public string ReplyText { get; set; } = string.Empty;
+        public string OriginalMessage { get; set; } = string.Empty;
+        public string Intent { get; set; } = string.Empty;
+        public string Sentiment { get; set; } = string.Empty;
         
         // Dùng cho retry (nếu gửi thẳng từ retry_service thì đọc trường này)
         public int RetryCount { get; set; } = 0;

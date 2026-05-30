@@ -88,6 +88,7 @@ app.MapPost("/webhook", async (
         return Results.BadRequest(new { error = "Request body is empty." });
     }
 
+    // Đã bật lại check signature để nhận dữ liệu thật từ Facebook
     if (!IsValidSignature(signatureHeader, rawBody, options.Value.AppSecret))
     {
         return Results.StatusCode(StatusCodes.Status403Forbidden);
